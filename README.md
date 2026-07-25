@@ -20,6 +20,15 @@ That's when I realized I could try the thing every one of us now has sitting in 
 
 So I built **My Little LinkedIn**: not just a defluffer, but a general lens for your feed — swap the transform (defluff, pirate, corporate, or your own), tag the topics you care about, and get a per-post verdict — all powered by the on-device model.
 
+## See it
+
+<p align="center">
+  <img src="assets/screenshots/feed.png" width="560" alt="A LinkedIn post rewritten in place, with topic tags, thumbs, and a relevance verdict" />
+</p>
+<p align="center">
+  <img src="assets/screenshots/popup.png" width="320" alt="The settings popup: transform picker, relevance toggle, topic lists, and custom transforms" />
+</p>
+
 ## What it does
 
 - **Transform every post** — pick a style and the post body is rewritten in place as you scroll, with a *show original* toggle:
@@ -40,6 +49,19 @@ Everything runs through Chrome's built-in `LanguageModel` (Prompt API / Gemini N
 - An `IntersectionObserver` + `AbortController` per post means off-screen posts never burn compute.
 
 No network requests. No analytics. The only thing stored is your settings (topics + transforms), in Chrome's own sync storage.
+
+## How it compares
+
+There are plenty of LinkedIn cleaners and plenty of Gemini Nano assistants — but they sit on opposite sides of two lines, and My Little LinkedIn is the tool that crosses both:
+
+| | How it runs the AI | How it acts on your feed |
+| --- | --- | --- |
+| **Defluffer / LinkedIn TLDR** | Backend (server-side Gemini) | Summarize posts to one line |
+| **Keyword muters** (Topic Filter, LinkedOut, LinkOff) | No AI — string matching | Hide posts containing a word |
+| **Nano assistants** (NanoBot, Gemini Nano Assistant) | On-device | On-demand — you highlight text or open a chat |
+| **My Little LinkedIn** | **On-device (Prompt API)** | **Ambient — rewrites every post in place + a semantic relevance verdict as you scroll** |
+
+Two things make it distinct: it's **on-device** (no server, unlike Defluffer/TLDR) *and* it's an **ambient feed lens** (it works automatically on the feed, unlike the assistants you have to invoke). And because it judges *meaning* rather than keywords, "Muted" catches a post about layoffs even when the word never appears.
 
 ## Install (developer mode)
 
