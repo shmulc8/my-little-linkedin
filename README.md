@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icons/logo512.png" width="120" alt="My Little LinkedIn logo" />
+  <img src="assets/logo512.png" width="120" alt="My Little LinkedIn logo" />
 </p>
 
 <h1 align="center">My Little LinkedIn</h1>
@@ -52,12 +52,25 @@ This uses Chrome's built-in AI, which is still gated behind flags today:
    - `#prompt-api-for-gemini-nano` → **Enabled**
    - `#optimization-guide-on-device-model` → **Enabled BypassPerfRequirement**
 3. Restart Chrome. The model downloads once (~2 GB) on first use.
-4. Go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select this folder.
+4. Go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the **`src/`** folder.
 5. Open your LinkedIn feed. If the model isn't ready you'll get an honest little "on-device AI unavailable" note instead of silent nothing.
 
 ## Privacy
 
 Your posts never leave your browser — there is no server. The extension only touches `linkedin.com`, stores only your own settings, and collects nothing.
+
+## Repo layout
+
+```
+src/        the extension — "Load unpacked" this folder
+  manifest.json, *.js, *.css, popup.html
+  icons/    the 16/48/128 icons referenced by the manifest
+assets/     logo + Chrome Web Store promo art (not shipped in the extension)
+```
+
+## License
+
+[MIT](LICENSE).
 
 ## Credits
 
