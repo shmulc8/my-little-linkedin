@@ -82,7 +82,21 @@
     );
   }
 
-  const cleanText = (s) => s.replace(/[…\.]{1,3}\s*more\s*$/i, '').trim();
+  // Extract the post's real text WITHOUT LinkedIn's "…see more" / "…ראה עוד" /
+  // "טען עוד" control. That control is a <button>, so we drop buttons (any
+  // language) rather than pattern-matching the localized word, then tidy any
+  // leftover trailing ellipsis.
+  function extractText(textEl) {
+    const clone = textEl.cloneNode(true);
+    clone.querySelectorAll('button, [role="button"]').forEach((el) => el.remove());
+    return cleanText(clone.textContent || '');
+  }
+
+  const cleanText = (s) =>
+    s
+      .replace(/\s+(?:see|show|read)?\s*more\s*$/i, '') // english leftover, if any
+      .replace(/(?:…|\.{2,3})\s*$/, '') // trailing ellipsis
+      .trim();
 
   function clampTargets(textEl) {
     const t = [textEl];
@@ -248,7 +262,7 @@
       return;
     }
 
-    const text = cleanText(textEl.innerText);
+    const text = extractText(textEl);
     if (text.length < 40) {
       textEl.setAttribute(PROCESSED, 'skip');
       return;
@@ -320,7 +334,9 @@
     if (liked && disliked) return 'neutral';
     if (disliked) return 'muted';
     if (liked) return 'relevant';
-    return model.verdict;
+    // "Muted" is reserved for posts that match one of YOUR avoid topics — never
+    // let the model mute on its own (Nano sometimes does, with no real reason).
+    return model.verdict === 'muted' ? 'neutral' : model.verdict;
   }
 
   // 👍/👎 a topic → add it to care/avoid (mutually exclusive; clicking the
