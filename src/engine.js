@@ -43,13 +43,28 @@
   };
 
   const langName = (lang) => (lang === 'he' ? 'Hebrew' : 'English');
-  const langNudge = (lang) =>
-    lang === 'he' ? '\n\nהשב בעברית בלבד.' : '\n\nAnswer in English only.';
 
-  function buildClassifyPrompt(text, lang, care, avoid) {
+  // Language the rewritten post should come out in. Hebrew gets a hard Hebrew
+  // override; anything else is written in the post's own language rather than
+  // forced into English.
+  const outputLang = (lang) => (lang === 'he' ? 'Hebrew' : 'the same language as the original post');
+  const langNudge = (lang) =>
+    lang === 'he'
+      ? '\n\nהשב בעברית בלבד.'
+      : '\n\nWrite your response in the same language as the post above.';
+
+  // Appended to every rewrite so no transform turns tone-deaf or mangles a name.
+  const GUARDRAIL =
+    'Stay kind: never be sarcastic, mocking, or dismissive about layoffs, job loss, ' +
+    'grief, illness, death, family, or religion, and never toward students, new ' +
+    "graduates, or job-seekers. Keep every real person's name exactly as written — " +
+    "never invent, translate, or swap a name — and do not assume anyone's gender.";
+
+  function buildClassifyPrompt(text, author, lang, care, avoid) {
     const careStr = care && care.length ? care.join(', ') : '(none given)';
     const avoidStr = avoid && avoid.length ? avoid.join(', ') : '(none given)';
     return [
+      author ? `Post author: ${author}` : null,
       'Post:',
       '"""',
       text.slice(0, 3000),
@@ -64,7 +79,9 @@
       "If I gave no interests, never use 'relevant' — use 'neutral' unless it matches an avoid topic.",
       'Give a very short reason (max 12 words).',
       `Write the topics and the reason in ${langName(lang)}.`,
-    ].join('\n');
+    ]
+      .filter((l) => l !== null)
+      .join('\n');
   }
 
   function normalizeVerdict(o) {
@@ -75,6 +92,42 @@
     const result = { topics, verdict, reason };
     if (typeof o.rewrite === 'string') result.rewrite = o.rewrite.trim();
     return result;
+  }
+
+  // Pull one "key":"value" string field out of possibly-broken JSON.
+  function salvageString(raw, key) {
+    const m = raw.match(new RegExp('"' + key + '"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"'));
+    if (!m) return null;
+    try {
+      return JSON.parse('"' + m[1] + '"');
+    } catch (_) {
+      return m[1];
+    }
+  }
+
+  function salvageTopics(raw) {
+    const m = raw.match(/"topics"\s*:\s*\[([\s\S]*?)\]/);
+    if (!m) return [];
+    return (m[1].match(/"((?:\\.|[^"\\])*)"/g) || []).map((s) => {
+      try {
+        return JSON.parse(s);
+      } catch (_) {
+        return s.replace(/^"|"$/g, '');
+      }
+    });
+  }
+
+  // Last resort when the model returns truncated or invalid JSON: rescue each
+  // field on its own so one malformed byte doesn't drop the whole post.
+  function salvageVerdict(raw) {
+    const verdict = salvageString(raw, 'verdict');
+    const reason = salvageString(raw, 'reason');
+    const rewrite = salvageString(raw, 'rewrite');
+    const topics = salvageTopics(raw);
+    if (verdict == null && reason == null && rewrite == null && !topics.length) return null;
+    const o = { topics, verdict, reason };
+    if (rewrite != null) o.rewrite = rewrite;
+    return normalizeVerdict(o);
   }
 
   function parseVerdict(raw) {
@@ -89,10 +142,10 @@
       try {
         return normalizeVerdict(JSON.parse(match[0]));
       } catch (_) {
-        /* ignore */
+        /* fall through to field salvage */
       }
     }
-    return null;
+    return salvageVerdict(raw);
   }
 
   function createEngine() {
@@ -167,7 +220,7 @@
         transformBases.set(
           systemPrompt,
           createSession({
-            initialPrompts: [{ role: 'system', content: systemPrompt }],
+            initialPrompts: [{ role: 'system', content: systemPrompt + '\n\n' + GUARDRAIL }],
             temperature: Math.min(1.0, params?.maxTemperature ?? 1.0),
             topK: Math.min(8, params?.maxTopK ?? 8),
             expectedInputs: [{ type: 'text', languages: ['en', 'he'] }],
@@ -202,12 +255,12 @@
       draining = false;
     }
 
-    async function classify(text, lang, care, avoid, signal) {
+    async function classify(text, author, lang, care, avoid, signal) {
       return run(async () => {
         if (signal?.aborted || !(await ensureAvailable())) return null;
         const session = await (await getClassifyBase()).clone();
         try {
-          const prompt = buildClassifyPrompt(text, lang, care, avoid);
+          const prompt = buildClassifyPrompt(text, author, lang, care, avoid);
           let raw;
           try {
             raw = await session.prompt(prompt, { responseConstraint: CLASSIFY_SCHEMA, signal });
@@ -225,16 +278,17 @@
 
     // One call that returns { topics, verdict, reason, rewrite }. Used when the
     // reader wants BOTH a verdict and a rewrite — halves the per-post latency.
-    async function analyze(text, transformPrompt, lang, care, avoid, signal) {
+    async function analyze(text, author, transformPrompt, lang, care, avoid, signal) {
       return run(async () => {
         if (signal?.aborted || !(await ensureAvailable())) return null;
         const session = await (await getAnalyzeBase()).clone();
         try {
           const prompt =
-            buildClassifyPrompt(text, lang, care, avoid) +
+            buildClassifyPrompt(text, author, lang, care, avoid) +
             '\n\nAlso rewrite the post following this instruction: ' +
             transformPrompt +
-            `\nPut the rewrite in the "rewrite" field, written in ${langName(lang)}.`;
+            '\n' + GUARDRAIL +
+            `\nPut the rewrite in the "rewrite" field, written in ${outputLang(lang)}.`;
           let raw;
           try {
             raw = await session.prompt(prompt, { responseConstraint: ANALYZE_SCHEMA, signal });
@@ -249,12 +303,13 @@
       });
     }
 
-    async function transform(text, systemPrompt, lang, signal) {
+    async function transform(text, author, systemPrompt, lang, signal) {
       return run(async () => {
         if (signal?.aborted || !(await ensureAvailable())) return null;
         const session = await (await getTransformBase(systemPrompt)).clone();
         try {
-          const out = await session.prompt(text.slice(0, 2000) + langNudge(lang), { signal });
+          const preamble = author ? `This post was written by ${author}.\n\n` : '';
+          const out = await session.prompt(preamble + text.slice(0, 2000) + langNudge(lang), { signal });
           return out.trim();
         } finally {
           session.destroy();

@@ -22,11 +22,19 @@
       builtin: true,
       name: 'Defluff (one honest line)',
       promptEn:
-        'Rewrite the post as ONE short, honest, deadpan sentence stating the only real point. ' +
-        'Strip all inspirational fluff, emoji, hashtags and engagement bait. Max 16 words.',
+        'Rewrite the post as ONE short, honest, deadpan sentence stating its only real point. ' +
+        'Strip all inspirational fluff, emoji, hashtags and engagement bait. ' +
+        "Be specific — name the actual thing (company, number, role, outcome): " +
+        "'raised a $2M seed round' beats 'exciting news'. " +
+        "The line must stand on its own: no dangling references like 'the tool' or 'the repo' — say what it is. " +
+        'Max 16 words.',
       promptHe:
-        'שכתב את הפוסט כמשפט אחד קצר, כן ויבש שמנסח את הנקודה האמיתית היחידה. ' +
-        "הסר כל מליצות, אימוג'ים, האשטגים ופיתיונות למעורבות. עד 16 מילים. כתוב בעברית.",
+        'שכתב את הפוסט כמשפט אחד קצר, כן ויבש שמנסח את הנקודה האמיתית היחידה שלו. ' +
+        "הסר כל מליצות, אימוג'ים, האשטגים ופיתיונות למעורבות. " +
+        "היה ספציפי — נקוב בדבר עצמו (חברה, מספר, תפקיד, תוצאה): " +
+        "'גייס סבב זרע של 2 מיליון דולר' עדיף על 'חדשות מרגשות'. " +
+        "המשפט חייב לעמוד בפני עצמו: בלי הפניות מעורפלות כמו 'הכלי' או 'הפרויקט' — אמור מהו. " +
+        'עד 16 מילים. כתוב בעברית.',
     },
     {
       id: 'pirate',

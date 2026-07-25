@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>My Little LinkedIn — reveal() sandbox</title>
+    <style>
+      body { font-family: -apple-system, system-ui, sans-serif; background: #f4f2ee; margin: 0; padding: 24px; }
+      /* Mirror real LinkedIn: side padding lives on the text element, not the card. */
+      .card { width: 555px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); padding: 12px 0 16px; margin-bottom: 16px; }
+      .head { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0 16px; }
+      .post { font-size: 14px; line-height: 20px; color: rgba(0, 0, 0, 0.9); margin: 0; padding: 0 16px; }
+      .controls { width: 555px; display: flex; gap: 8px; flex-wrap: wrap; }
+      button.go { font: 600 13px system-ui; padding: 6px 12px; border-radius: 8px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; cursor: pointer; }
+
+      /* ---- mirrored from src/content.css (keep in sync) ---- */
+      .mll-summary { border-radius: 6px; }
+      .mll-flash { animation: mll-flash 0.9s ease-out; }
+      @keyframes mll-flash {
+        0% { background: rgba(10, 102, 194, 0.16); box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.55), 0 6px 22px rgba(10, 102, 194, 0.3); }
+        100% { background: transparent; box-shadow: 0 0 0 0 rgba(10, 102, 194, 0); }
+      }
+      .mll-badge {
+        display: inline-block; margin-top: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600;
+        color: #0a66c2; background: rgba(10, 102, 194, 0.08); border: none; border-radius: 12px; cursor: pointer;
+        font-family: -apple-system, system-ui, sans-serif;
+      }
+      .mll-badge:hover { background: rgba(10, 102, 194, 0.16); }
+    </style>
+  </head>
+  <body>
+    <p style="width: 555px; color: #666; font-size: 13px">
+      Standalone sandbox for the cross-fade in <code>reveal()</code> — no extension load, no LinkedIn, no model.
+      Edit a post, click <b>Transform</b>, and tune the fade timings here, then port back to
+      <code>src/content.js</code>.
+    </p>
+
+    <div class="card">
+      <div class="head">Dana Levi · 1st</div>
+      <p class="post" id="postEn">
+        I am beyond thrilled and humbled to share some incredibly exciting news that has been months in the
+        making! 🎉🚀 After a transformational journey full of growth and late nights, I have officially accepted a
+        new role as Senior Product Manager at Acme. None of this would have been possible without my mentors and
+        family. Onwards and upwards! 🙏 #blessed #newbeginnings
+      </p>
+    </div>
+    <div class="controls">
+      <button class="go" onclick="go('postEn', 'Dana is now a Senior Product Manager at Acme.', 'Defluff', false)">
+        Transform (EN)
+      </button>
+    </div>
+
+    <div class="card" style="margin-top: 24px">
+      <div class="head">דנה לוי · 1st</div>
+      <p class="post" id="postHe" dir="rtl">
+        אני נרגשת עד עמקי נשמתי לחלוק חדשות מרעישות! 🎉 אחרי מסע מטלטל של צמיחה ולילות לבנים, התקבלתי לתפקיד
+        מנהלת מוצר בכירה ב-Acme. תודה למנטורים, למשפחה ולכל מי שהאמין. קדימה ולמעלה! 🙏 #מבורכת
+      </p>
+    </div>
+    <div class="controls">
+      <button class="go" onclick="go('postHe', 'דנה מונתה למנהלת מוצר בכירה ב-Acme.', 'Defluff', true)">
+        Transform (HE)
+      </button>
+    </div>
+
+    <script>
+      // A chrome-free copy of the essence of reveal() in src/content.js: it copies
+      // the post's own computed typography onto the rewritten line and cross-fades.
+      function go(id, text, name, rtl) {
+        const textEl = document.getElementById(id);
+        if (textEl.dataset.done) location.reload();
+        textEl.dataset.done = '1';
+
+        const cs = getComputedStyle(textEl);
+        const summaryEl = document.createElement('div');
+        summaryEl.className = 'mll-summary';
+        summaryEl.style.paddingLeft = cs.paddingLeft;
+        summaryEl.style.paddingRight = cs.paddingRight;
+
+        const line = document.createElement('div');
+        line.textContent = text;
+        line.style.whiteSpace = 'pre-line';
+        line.setAttribute('dir', rtl ? 'rtl' : 'auto');
+        line.style.textAlign = 'start';
+        line.style.color = cs.color;
+        line.style.fontSize = cs.fontSize;
+        line.style.fontWeight = cs.fontWeight;
+        line.style.lineHeight = cs.lineHeight;
+        line.style.fontFamily = cs.fontFamily;
+
+        const badge = document.createElement('button');
+        badge.type = 'button';
+        badge.className = 'mll-badge';
+        badge.setAttribute('dir', 'ltr');
+        badge.textContent = name + ' · show original';
+
+        summaryEl.append(line, badge);
+        const origH = textEl.offsetHeight;
+        textEl.insertAdjacentElement('afterend', summaryEl);
+        const sumH = summaryEl.offsetHeight;
+
+        textEl.style.overflow = 'hidden';
+        textEl.style.maxHeight = origH + 'px';
+        textEl.style.opacity = '1';
+        summaryEl.style.overflow = 'hidden';
+        summaryEl.style.maxHeight = '0px';
+        summaryEl.style.opacity = '0';
+        void textEl.offsetHeight;
+
+        textEl.style.transition = 'max-height .45s ease, opacity .3s ease';
+        summaryEl.style.transition = 'max-height .45s ease, opacity .45s ease .08s';
+        requestAnimationFrame(() => {
+          textEl.style.maxHeight = '0px';
+          textEl.style.opacity = '0';
+          summaryEl.style.maxHeight = sumH + 'px';
+          summaryEl.style.opacity = '1';
+          summaryEl.classList.add('mll-flash');
+        });
+        setTimeout(() => {
+          textEl.style.display = 'none';
+          summaryEl.style.maxHeight = 'none';
+          summaryEl.style.transition = '';
+          summaryEl.classList.remove('mll-flash');
+        }, 700);
+      }
+    </script>
+  </body>
+</html>

@@ -153,6 +153,35 @@
     return false;
   }
 
+  // The poster's name, so the model can name the subject even when the body
+  // never does (e.g. "Excited to join Venn 🎉"). LinkedIn exposes it in
+  // screen-reader strings like "View Dana Cohen’s profile" on the avatar. A
+  // repost carries several actor labels ("X reposted" header then the real
+  // poster) — take the last one before the post text in document order.
+  function findAuthor(post, textEl) {
+    const labels = [...post.querySelectorAll('img[alt^="View "], [aria-label^="View "]')];
+    let pick = labels[0];
+    if (textEl) {
+      const before = labels.filter(
+        (el) => el.compareDocumentPosition(textEl) & Node.DOCUMENT_POSITION_FOLLOWING
+      );
+      if (before.length) pick = before[before.length - 1];
+    }
+    const label = pick?.getAttribute('alt') || pick?.getAttribute('aria-label') || '';
+    const m = label.match(/View (.+?)[’'`]s profile/);
+    if (m) return m[1].trim();
+
+    const links = [...post.querySelectorAll('a[href*="/in/"], a[href*="/company/"]')];
+    const ordered = textEl
+      ? links.filter((a) => a.compareDocumentPosition(textEl) & Node.DOCUMENT_POSITION_FOLLOWING).reverse()
+      : links;
+    for (const a of ordered) {
+      const t = (a.innerText || '').trim().split('\n')[0];
+      if (t && !/^View /.test(t)) return t.slice(0, 60);
+    }
+    return '';
+  }
+
   // --- Scanning: mark posts, then do the AI work only near the viewport -----
 
   // Gate the actual work on visibility, and — crucially — CANCEL it the moment a
@@ -271,6 +300,7 @@
 
     const lang = MLL.detectLang(text); // output follows the post's own language
     textEl.__mllHeb = lang === 'he';
+    const author = findAuthor(post, textEl);
     const care = settings.careTopics || [];
     const avoid = settings.avoidTopics || [];
 
@@ -291,29 +321,29 @@
 
     if (needVerdict && needTransform) {
       // Speed path: one call returns verdict + rewrite.
-      const key = `a|${settings.activeTransform}|${topicSig()}|${lang}|${text}`;
+      const key = `a|${settings.activeTransform}|${topicSig()}|${lang}|${author}|${text}`;
       let res = cacheGet(key);
       if (res === undefined) {
-        res = await engine.analyze(text, tPrompt, lang, care, avoid, signal);
+        res = await engine.analyze(text, author, tPrompt, lang, care, avoid, signal);
         if (!signal.aborted) cacheSet(key, res);
       }
       if (!contextAlive() || signal.aborted || !res || !textEl.isConnected) return settle(textEl, post, signal);
       renderVerdict(post, textEl, res);
       if (res.rewrite) reveal(textEl, { text: res.rewrite, name: tName });
     } else if (needVerdict) {
-      const key = `v|${topicSig()}|${lang}|${text}`;
+      const key = `v|${topicSig()}|${lang}|${author}|${text}`;
       let v = cacheGet(key);
       if (v === undefined) {
-        v = await engine.classify(text, lang, care, avoid, signal);
+        v = await engine.classify(text, author, lang, care, avoid, signal);
         if (!signal.aborted) cacheSet(key, v);
       }
       if (!contextAlive() || signal.aborted || !v || !textEl.isConnected) return settle(textEl, post, signal);
       renderVerdict(post, textEl, v);
     } else {
-      const key = `t|${settings.activeTransform}|${lang}|${text}`;
+      const key = `t|${settings.activeTransform}|${lang}|${author}|${text}`;
       let out = cacheGet(key);
       if (out === undefined) {
-        out = await engine.transform(text, tPrompt, lang, signal);
+        out = await engine.transform(text, author, tPrompt, lang, signal);
         if (!signal.aborted) cacheSet(key, out);
       }
       if (!contextAlive() || signal.aborted || !out || !textEl.isConnected) return settle(textEl, post, signal);

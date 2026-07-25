@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>My Little LinkedIn — prompt eval</title>
+    <!-- Reuses the SHIPPING code so the eval always tests what users run. -->
+    <script src="../src/shared.js"></script>
+    <script src="../src/engine.js"></script>
+    <script src="golden-set.js"></script>
+    <style>
+      body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 0; padding: 20px; color: #1a1a1a; background: #fafafa; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .sub { color: #666; margin: 0 0 16px; }
+      .bar { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; padding: 12px; background: #fff; border: 1px solid #e3e3e3; border-radius: 8px; }
+      .bar label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 3px; }
+      textarea, select { font: 13px system-ui; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; }
+      textarea { width: 200px; height: 52px; resize: vertical; }
+      button { font: 600 13px system-ui; padding: 8px 16px; border-radius: 8px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; cursor: pointer; }
+      button.secondary { background: #fff; color: #0a66c2; }
+      button:disabled { opacity: 0.5; cursor: default; }
+      #status { margin: 0 0 12px; font-size: 13px; color: #0a66c2; min-height: 18px; }
+      table { border-collapse: collapse; width: 100%; background: #fff; }
+      th, td { border: 1px solid #e3e3e3; padding: 8px; text-align: left; vertical-align: top; font-size: 13px; }
+      th { background: #f0f0f0; position: sticky; top: 0; }
+      td.note { color: #888; width: 130px; }
+      td.post { width: 300px; white-space: pre-wrap; }
+      .chip { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+      .relevant { background: rgba(20, 140, 60, 0.14); color: #148c3c; }
+      .neutral { background: rgba(120, 120, 120, 0.14); color: #666; }
+      .muted { background: rgba(200, 60, 60, 0.14); color: #c33; }
+      .tags { color: #444; font-size: 12px; }
+      .rewrite { white-space: pre-wrap; }
+      .rate select { width: 90px; }
+      .rate textarea { width: 130px; height: 40px; }
+    </style>
+  </head>
+  <body>
+    <h1>My Little LinkedIn — prompt eval</h1>
+    <p class="sub">
+      Runs the golden set through the <b>real on-device engine</b> (<code>src/engine.js</code>). Tweak the prompts in
+      <code>src/shared.js</code> / <code>src/engine.js</code>, reload, re-run, and compare. Serve over
+      <code>http://localhost</code> in a flags-enabled Chrome (see <code>eval/README.md</code>) — <code>file://</code> and
+      Node can't reach the Prompt API.
+    </p>
+
+    <div class="bar">
+      <div>
+        <label>Transform</label>
+        <select id="transform"></select>
+      </div>
+      <div>
+        <label>Topics I care about (comma-sep)</label>
+        <textarea id="care">funding, product launches</textarea>
+      </div>
+      <div>
+        <label>Topics to avoid (comma-sep)</label>
+        <textarea id="avoid">hiring</textarea>
+      </div>
+      <button id="run">Run eval</button>
+      <button id="csv" class="secondary" disabled>Export CSV</button>
+    </div>
+
+    <p id="status">Checking on-device model…</p>
+    <table id="out">
+      <thead>
+        <tr>
+          <th>Case</th>
+          <th>Post</th>
+          <th>Verdict</th>
+          <th>Topics</th>
+          <th>Reason</th>
+          <th>Rewrite</th>
+          <th>Rating</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <script>
+      const engine = MLL.createEngine();
+      const $ = (id) => document.getElementById(id);
+      const status = (m) => ($('status').textContent = m);
+      const splitList = (s) => s.split(',').map((x) => x.trim()).filter(Boolean);
+
+      // Populate the transform picker from the shipping presets.
+      for (const p of MLL.PRESETS) {
+        const o = document.createElement('option');
+        o.value = p.id;
+        o.textContent = MLL.transformName(p) || p.id;
+        if (p.id === 'defluff') o.selected = true;
+        $('transform').append(o);
+      }
+
+      (async () => {
+        const ok = await engine.ensureAvailable();
+        status(ok ? 'Model ready. Pick a transform and Run eval.' : '⚠ On-device model unavailable — enable the flags and serve over http://localhost.');
+        $('run').disabled = !ok;
+      })();
+
+      let lastRows = [];
+
+      $('run').addEventListener('click', async () => {
+        const set = window.MLL_GOLDEN || [];
+        const transform = MLL.findTransform({ customTransforms: [] }, $('transform').value);
+        const care = splitList($('care').value);
+        const avoid = splitList($('avoid').value);
+        const body = $('out').querySelector('tbody');
+        body.innerHTML = '';
+        lastRows = [];
+        $('run').disabled = true;
+        $('csv').disabled = true;
+
+        for (let i = 0; i < set.length; i++) {
+          const item = set[i];
+          status(`Running ${i + 1}/${set.length}…`);
+          const lang = MLL.detectLang(item.text);
+          const tPrompt = MLL.promptFor(transform, lang);
+          const ac = new AbortController();
+          let res;
+          if (tPrompt) {
+            res = await engine.analyze(item.text, item.author || '', tPrompt, lang, care, avoid, ac.signal);
+          } else {
+            res = await engine.classify(item.text, item.author || '', lang, care, avoid, ac.signal);
+          }
+          res = res || { topics: [], verdict: 'neutral', reason: '(no result)', rewrite: '' };
+          const row = {
+            note: item.note || '',
+            author: item.author || '',
+            lang,
+            post: item.text,
+            verdict: res.verdict,
+            topics: (res.topics || []).join(', '),
+            reason: res.reason || '',
+            rewrite: res.rewrite || '',
+          };
+          lastRows.push(row);
+          renderRow(body, row);
+        }
+        status(`Done — ${set.length} cases. Rate each row, then Export CSV.`);
+        $('run').disabled = false;
+        $('csv').disabled = false;
+      });
+
+      function renderRow(body, r) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          `<td class="note">${esc(r.note)}<br><small>${esc(r.author)} · ${r.lang}</small></td>` +
+          `<td class="post">${esc(r.post)}</td>` +
+          `<td><span class="chip ${r.verdict}">${r.verdict}</span></td>` +
+          `<td class="tags">${esc(r.topics)}</td>` +
+          `<td>${esc(r.reason)}</td>` +
+          `<td class="rewrite">${esc(r.rewrite)}</td>` +
+          `<td class="rate"><select><option value=""></option><option>👍 good</option><option>😐 ok</option><option>👎 bad</option></select>` +
+          `<textarea placeholder="notes"></textarea></td>`;
+        const sel = tr.querySelector('select');
+        const notes = tr.querySelector('textarea');
+        sel.addEventListener('change', () => (r.rating = sel.value));
+        notes.addEventListener('input', () => (r.notes = notes.value));
+        body.append(tr);
+      }
+
+      const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+      $('csv').addEventListener('click', () => {
+        const cols = ['note', 'author', 'lang', 'verdict', 'topics', 'reason', 'rewrite', 'rating', 'notes', 'post'];
+        const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const lines = [cols.join(',')].concat(lastRows.map((r) => cols.map((c) => q(r[c])).join(',')));
+        // UTF-8 BOM so Excel/Sheets read Hebrew/French correctly.
+        const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'mll-eval.csv';
+        a.click();
+      });
+    </script>
+  </body>
+</html>
