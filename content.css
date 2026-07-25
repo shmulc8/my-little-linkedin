@@ -1,0 +1,197 @@
+/* The rewritten line copies the post's own computed typography in JS, so the
+   CSS here is deliberately minimal — just the pill chrome and the reveal glow. */
+
+.mll-summary {
+  border-radius: 6px;
+}
+
+/* Brief blue "marking" glow as the transformed text fades in, then settles. */
+.mll-flash {
+  animation: mll-flash 0.9s ease-out;
+}
+@keyframes mll-flash {
+  0% {
+    background: rgba(10, 102, 194, 0.16);
+    box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.55), 0 6px 22px rgba(10, 102, 194, 0.3);
+  }
+  100% {
+    background: transparent;
+    box-shadow: 0 0 0 0 rgba(10, 102, 194, 0);
+  }
+}
+
+/* Subtle pill — the shared look for the toggle badge and verdict chips. */
+.mll-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0a66c2;
+  background: rgba(10, 102, 194, 0.08);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+.mll-badge:hover {
+  background: rgba(10, 102, 194, 0.16);
+}
+
+/* "Calculating now" marker — a quiet spinner + label while a call is in flight. */
+.mll-busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(10, 102, 194, 0.08);
+  color: #0a66c2;
+  font: 600 12px -apple-system, system-ui, sans-serif;
+}
+.mll-busy__spin {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid rgba(10, 102, 194, 0.28);
+  border-top-color: #0a66c2;
+  animation: mll-spin 0.7s linear infinite;
+}
+@keyframes mll-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Verdict row sits inline under the post, matching the badge's quiet weight. */
+.mll-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.mll-row[dir='rtl'] {
+  justify-content: flex-end;
+}
+
+.mll-badge--relevant {
+  color: #1f8a45;
+  background: rgba(31, 138, 69, 0.1);
+}
+.mll-badge--relevant:hover {
+  background: rgba(31, 138, 69, 0.2);
+}
+.mll-badge--neutral {
+  color: #6a7178;
+  background: rgba(106, 113, 120, 0.12);
+  cursor: default;
+}
+.mll-badge--muted {
+  color: #b26a05;
+  background: rgba(239, 159, 39, 0.14);
+}
+.mll-badge--muted:hover {
+  background: rgba(239, 159, 39, 0.26);
+}
+
+.mll-topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #56687a;
+  background: rgba(86, 104, 122, 0.1);
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+.mll-topic__label {
+  white-space: nowrap;
+}
+.mll-thumb {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 1px;
+  opacity: 0.4;
+  filter: grayscale(1);
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+.mll-thumb:hover {
+  opacity: 0.95;
+  filter: none;
+}
+.mll-topic--up {
+  color: #1f8a45;
+  background: rgba(31, 138, 69, 0.12);
+}
+.mll-topic--up .mll-thumb--up {
+  opacity: 1;
+  filter: none;
+}
+.mll-topic--down {
+  color: #b26a05;
+  background: rgba(239, 159, 39, 0.14);
+}
+.mll-topic--down .mll-thumb--down {
+  opacity: 1;
+  filter: none;
+}
+.mll-reason {
+  font-size: 12px;
+  color: #8a8a8a;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+
+/* Muted card: calmly dimmed, restored on hover or via the chip. */
+.mll-muted-card {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+.mll-muted-card:hover {
+  opacity: 0.9;
+}
+
+/* Availability toast (the only heavy chrome — it's a system message). */
+.mll-toast {
+  position: fixed;
+  z-index: 99999;
+  bottom: 20px;
+  inset-inline-end: 20px;
+  max-width: 320px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #1b1f23;
+  color: #f3f2ef;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.mll-toast strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.mll-toast p {
+  margin: 0 0 10px;
+  color: #c9c6c0;
+}
+.mll-toast button {
+  border: none;
+  background: #70b5f9;
+  color: #10151a;
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.mll-toast button:hover {
+  background: #8cc4fa;
+}

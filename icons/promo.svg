@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="440" height="280">
+  <defs>
+    <linearGradient id="pbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a86ee"/>
+      <stop offset="1" stop-color="#0a4f9e"/>
+    </linearGradient>
+    <radialGradient id="pglow" cx="0.75" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="440" height="280" fill="url(#pbg)"/>
+  <rect width="440" height="280" fill="url(#pglow)"/>
+
+  <!-- logo tile on the right -->
+  <g transform="translate(250,60) scale(1.28)">
+    <g transform="translate(0,0)">
+      <circle cx="92"  cy="42"  r="17" fill="#ffdf7a"/>
+      <circle cx="104" cy="62"  r="17" fill="#8fe3c0"/>
+      <circle cx="102" cy="86"  r="16" fill="#c7adff"/>
+      <circle cx="92"  cy="104" r="14" fill="#ff9ec4"/>
+      <ellipse cx="72" cy="68" rx="33" ry="31" fill="#fffbf4"/>
+      <ellipse cx="46" cy="82" rx="17" ry="14" fill="#fffbf4"/>
+      <ellipse cx="46" cy="86" rx="13" ry="9" fill="#f3e7d6"/>
+      <path d="M96 46 Q101 28 88 34 Q86 44 92 50 Z" fill="#fffbf4"/>
+      <path d="M94 45 Q97 34 90 37 Q89 43 92 47 Z" fill="#ffc1dd"/>
+      <path d="M66 40 L60 8 L78 38 Z" fill="#ffe27a"/>
+      <path d="M67 30 L74 33 M69 22 L73 24" stroke="#e59b00" stroke-width="2" stroke-linecap="round"/>
+      <path d="M66 42 Q56 44 58 58 Q62 52 66 54 Q64 44 74 46 Q72 40 66 42 Z" fill="#ff9ec4"/>
+      <path d="M74 44 Q84 44 84 56 Q80 50 76 52 Q78 46 74 44 Z" fill="#ffdf7a"/>
+      <ellipse cx="60" cy="86" rx="4.4" ry="3.2" fill="#ff9ec4" opacity="0.75"/>
+      <ellipse cx="40" cy="84" rx="2" ry="2.6" fill="#b98aa0"/>
+      <ellipse cx="70" cy="66" rx="7.5" ry="9.5" fill="#4a3a63"/>
+      <circle cx="72.6" cy="62" r="2.6" fill="#ffffff"/>
+    </g>
+  </g>
+
+  <!-- wordmark -->
+  <text x="40" y="120" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="34" font-weight="800" fill="#ffffff">My Little</text>
+  <text x="40" y="158" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="34" font-weight="800" fill="#ffffff">LinkedIn</text>
+  <text x="40" y="196" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="15" font-weight="500" fill="#cfe2fb">Your feed, your rules.</text>
+  <text x="40" y="218" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="15" font-weight="500" fill="#cfe2fb">100% on-device. No API key.</text>
+</svg>

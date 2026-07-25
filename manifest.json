@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "My Little LinkedIn",
+  "version": "0.1.0",
+  "description": "Your LinkedIn, your rules: transform posts (defluff, pirate, custom…), tag topics you care about, and get an on-device relevance verdict on every post. English & Hebrew. No account, no API key.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.linkedin.com/*"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "My Little LinkedIn",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["shared.js", "engine.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

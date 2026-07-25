@@ -1,0 +1,242 @@
+:root {
+  --accent: #0a66c2;
+  --fg: #1d2226;
+  --muted: #6a6a6a;
+  --line: #e3e3e3;
+  --card: #f5f6f7;
+  --bg: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font: 13px/1.45 -apple-system, system-ui, sans-serif;
+  width: 340px;
+  max-height: 580px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 14px 16px 18px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+header img {
+  border-radius: 7px;
+  flex: none;
+}
+h1 {
+  font-size: 15px;
+  margin: 0;
+}
+.tagline {
+  margin: 1px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.saved {
+  margin-inline-start: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1f8a45;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.label {
+  font-weight: 600;
+}
+
+select {
+  font: inherit;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  max-width: 175px;
+}
+
+/* toggle switch */
+.switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex: none;
+}
+.switch input {
+  display: none;
+}
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+input:checked + .slider {
+  background: var(--accent);
+}
+input:checked + .slider::before {
+  transform: translateX(18px);
+}
+
+section {
+  padding: 12px 0 2px;
+  border-top: 1px solid var(--line);
+}
+h2 {
+  font-size: 13px;
+  margin: 0 0 2px;
+}
+
+/* Collapsible topic sections */
+.collapsible {
+  border-top: 1px solid var(--line);
+  padding: 4px 0 2px;
+}
+.collapsible > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+.collapsible > summary::before {
+  content: '▸';
+  color: var(--muted);
+  font-size: 11px;
+  transition: transform 0.15s ease;
+}
+.collapsible[open] > summary::before {
+  transform: rotate(90deg);
+}
+.count {
+  color: var(--muted);
+  font-weight: 500;
+}
+.collapsible .hint {
+  margin-top: 2px;
+}
+.hint {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+textarea,
+input[type='text'] {
+  width: 100%;
+  font: inherit;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  resize: vertical;
+}
+
+.custom-item {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--card);
+}
+.custom-item .field {
+  margin-bottom: 7px;
+}
+.custom-item label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.custom-item textarea {
+  min-height: 44px;
+}
+.custom-item .remove {
+  border: none;
+  background: none;
+  color: #b3261e;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.custom-item .remove:hover {
+  text-decoration: underline;
+}
+
+.add {
+  width: 100%;
+  margin-top: 2px;
+  padding: 8px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.add:hover {
+  background: var(--card);
+}
+
+.notice {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: rgba(178, 106, 5, 0.12);
+  color: #7a5400;
+  font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e9e5df;
+    --muted: #9aa4ae;
+    --line: #3a3a3a;
+    --card: #262b30;
+    --bg: #1b1f23;
+    --accent: #70b5f9;
+  }
+  select,
+  textarea,
+  input[type='text'] {
+    background: #262b30;
+  }
+}

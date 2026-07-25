@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon48.png" alt="" width="28" height="28" />
+      <div>
+        <h1 id="appName"></h1>
+        <p id="tagline" class="tagline"></p>
+      </div>
+      <span id="saved" class="saved" hidden></span>
+    </header>
+
+    <p id="unavailable" class="notice" hidden></p>
+
+    <label class="row switch-row">
+      <span class="label" data-i18n="enable"></span>
+      <span class="switch"><input type="checkbox" id="enabled" /><span class="slider"></span></span>
+    </label>
+
+    <label class="row">
+      <span class="label" data-i18n="transform"></span>
+      <select id="activeTransform"></select>
+    </label>
+
+    <label class="row switch-row">
+      <span class="label" data-i18n="showVerdict"></span>
+      <span class="switch"><input type="checkbox" id="showVerdict" /><span class="slider"></span></span>
+    </label>
+
+    <details class="collapsible">
+      <summary><span id="careTitle"></span><span class="count" id="careCount"></span></summary>
+      <p class="hint" id="careHint"></p>
+      <textarea id="careTopics" rows="3"></textarea>
+    </details>
+
+    <details class="collapsible">
+      <summary><span id="avoidTitle"></span><span class="count" id="avoidCount"></span></summary>
+      <p class="hint" id="avoidHint"></p>
+      <textarea id="avoidTopics" rows="3"></textarea>
+    </details>
+
+    <section>
+      <h2 id="customTitle"></h2>
+      <p class="hint" id="customHint"></p>
+      <div id="customList"></div>
+      <button id="addTransform" class="add"></button>
+    </section>
+
+    <script src="shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
