@@ -137,7 +137,8 @@
       p === '/feed' ||
       p.startsWith('/feed/update/') ||
       p.startsWith('/posts/') ||
-      p.startsWith('/in/')
+      p.startsWith('/in/') ||
+      p.startsWith('/search/results/content/')
     );
   }
 

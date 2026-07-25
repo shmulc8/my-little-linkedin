@@ -51,9 +51,11 @@ This uses Chrome's built-in AI, which is still gated behind flags today:
 2. At `chrome://flags`, set:
    - `#prompt-api-for-gemini-nano` → **Enabled**
    - `#optimization-guide-on-device-model` → **Enabled BypassPerfRequirement**
-3. Restart Chrome. The model downloads once (~2 GB) on first use.
-4. Go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the **`src/`** folder.
-5. Open your LinkedIn feed. If the model isn't ready you'll get an honest little "on-device AI unavailable" note instead of silent nothing.
+   - If your Chrome shows any other built-in-AI flag (e.g. an "On-Device AI" toggle), enable it too.
+3. Restart Chrome.
+4. Fetch the model (~2 GB, once per profile): open `chrome://components`, find **Optimization Guide On Device Model**, and click **Check for update**. It works on first use anyway, but this pulls it ahead of time.
+5. Go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the **`src/`** folder.
+6. Open your LinkedIn feed. If the model isn't ready you'll get an honest little "on-device AI unavailable" note instead of silent nothing.
 
 ## Privacy
 
